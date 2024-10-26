@@ -1,11 +1,47 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, Image, TextInput, TouchableOpacity, ScrollView, Keyboard, TouchableWithoutFeedback, KeyboardAvoidingView, Platform } from 'react-native';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 const RegisterScreen = ({ navigation }) => {
+  const [firstName, setFirstName] = useState(''); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isAgreed, setIsAgreed] = useState(false); 
+  const [showPassword, setShowPassword] = useState(false); 
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); 
+
+  const handleRegister = async () => {
+    if (!isAgreed) {
+      alert('Please agree to the Terms and Conditions.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      alert('Passwords do not match.');
+      return;
+    }
+
+    try {
+      const auth = getAuth();
+      const db = getFirestore();
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Store additional user info in Firestore
+      await setDoc(doc(db, 'users', user.uid), {
+        firstName: firstName,
+        email: email
+      });
+
+      alert('Registration successful!');
+      navigation.replace('Home');
+    } catch (error) {
+      console.error("Registration Error: ", error);
+      alert('Registration failed. Please try again.');
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -13,13 +49,20 @@ const RegisterScreen = ({ navigation }) => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0} 
     >
-
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
           <Image source={require('../../assets/images/logo.png')} style={styles.logo} />
           <View style={styles.contentContainer}>
             <Text style={styles.title}>Create Account</Text>
             
+            <Text style={styles.label}>First Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Your First Name"
+              value={firstName}
+              onChangeText={setFirstName}
+            />
+
             <Text style={styles.label}>Email</Text>
             <TextInput
               style={styles.input}
@@ -31,22 +74,32 @@ const RegisterScreen = ({ navigation }) => {
             />
             
             <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter Your Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
-            
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter Your Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+              />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.toggleButton}>
+                <Text style={styles.toggleText}>{showPassword ? 'Hide' : 'Show'}</Text>
+              </TouchableOpacity>
+            </View>
+
             <Text style={styles.label}>Confirm Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm Your Password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-            />
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Confirm Your Password"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={!showConfirmPassword}
+              />
+              <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.toggleButton}>
+                <Text style={styles.toggleText}>{showConfirmPassword ? 'Hide' : 'Show'}</Text>
+              </TouchableOpacity>
+            </View>
 
             <View style={styles.checkboxContainer}>
               <TouchableOpacity onPress={() => setIsAgreed(!isAgreed)} style={styles.checkbox}>
@@ -54,13 +107,13 @@ const RegisterScreen = ({ navigation }) => {
               </TouchableOpacity>
               <Text style={styles.checkboxLabel}>
                 I agree to the{' '}
-                <TouchableOpacity onPress={() => navigation.navigate('TermsScreen')}>
+                <TouchableOpacity onPress={() => navigation.navigate('Terms And Conditions')}>
                   <Text style={styles.linkText}>Terms and Conditions</Text>
                 </TouchableOpacity>
               </Text>
             </View>
 
-            <TouchableOpacity style={styles.button} onPress={() => alert('Register Pressed')}>
+            <TouchableOpacity style={styles.button} onPress={handleRegister}>
               <Text style={styles.buttonText}>Register</Text>
             </TouchableOpacity>
 
@@ -116,6 +169,10 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginBottom: 5,
   },
+  inputContainer: {
+    position: 'relative',
+    width: '100%',
+  },
   input: {
     width: '100%',
     height: 50,
@@ -123,7 +180,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 5,
     paddingHorizontal: 10,
-    marginBottom: 20,
+    marginBottom: 10,
+  },
+  toggleButton: {
+    position: 'absolute',
+    right: 10,
+    top: 12,
   },
   button: {
     backgroundColor: '#ffaa00',
@@ -146,7 +208,7 @@ const styles = StyleSheet.create({
     color: 'black',
   },
   linkText: {
-    color: '#ffaa00',
+    color: '#ffaa00', 
     fontSize: 16,
     marginBottom: -2,
     textDecorationLine: 'underline',
@@ -174,6 +236,11 @@ const styles = StyleSheet.create({
   checkboxLabel: {
     fontSize: 16,
     color: 'black',
+  },
+  toggleText: {
+    color: '#ffaa00',
+    fontSize: 16,
+    textDecorationLine: 'underline',
   },
 });
 

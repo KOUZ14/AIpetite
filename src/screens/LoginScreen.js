@@ -1,7 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, View, Image, TextInput, TouchableOpacity, ScrollView, Keyboard, TouchableWithoutFeedback, KeyboardAvoidingView, Platform } from 'react-native';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'; // Import Firebase Auth
 
 const LoginScreen = ({ navigation }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const auth = getAuth(); // Initialize Firebase Auth
+
+  const handleLogin = async () => {
+    try {
+      // Sign in with email and password
+      await signInWithEmailAndPassword(auth, email, password);
+      // Navigate to Home without allowing the user to go back to Login
+      console.log("Navigating to Home...");
+    } catch (error) {
+      console.error("Login Error: ", error);
+      alert('Login failed. Please check your credentials.');
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -11,7 +28,6 @@ const LoginScreen = ({ navigation }) => {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
           <Image source={require('../../assets/images/logo.png')} style={styles.logo} />
-          
           
           <View style={styles.contentContainer}>
             <Text style={styles.title}>Ready To Grub?</Text>
@@ -23,6 +39,8 @@ const LoginScreen = ({ navigation }) => {
               placeholder="Enter Your Email"
               keyboardType="email-address"
               autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
             />
             
             <Text style={styles.label}>Password</Text>
@@ -30,9 +48,11 @@ const LoginScreen = ({ navigation }) => {
               style={styles.input}
               placeholder="Enter Your Password"
               secureTextEntry
+              value={password}
+              onChangeText={setPassword}
             />
 
-            <TouchableOpacity style={styles.button} onPress={() => alert('Log In Pressed')}>
+            <TouchableOpacity style={styles.button} onPress={handleLogin}>
               <Text style={styles.buttonText}>Log In</Text>
             </TouchableOpacity>
 
@@ -60,13 +80,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
-
   logo: {
     width: 400,
     height: 100,
     marginBottom: 80,
   },
-
   contentContainer: {
     backgroundColor: 'white',
     padding: 20,
@@ -90,11 +108,10 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 20,
   },
-
   label: {
     fontSize: 14,
-    color: '#999', 
-    alignSelf: 'flex-start', 
+    color: '#999',
+    alignSelf: 'flex-start',
     marginBottom: 5,
   },
   input: {
