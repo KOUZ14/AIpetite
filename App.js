@@ -1,20 +1,27 @@
-import './src/services/firebaseConfig'; // Import Firebase config first
+// src/App.js
+
+import './src/services/firebaseConfig'; 
 import 'react-native-gesture-handler';
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
+import { Image } from 'react-native';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import TermsScreen from './src/screens/TermsScreen';
-import { getAuth, onAuthStateChanged } from 'firebase/auth'; // Import Firebase Auth
-import { getFirestore, doc, getDoc } from "firebase/firestore"; // Import Firestore
+import AccountScreen from './src/screens/AccountScreen';
+import SettingsScreen from './src/screens/SettingsScreen';
+import DefaultHeader from './src/components/DefaultHeader'; 
+import AccountHeader from './src/components/AccountHeader'; 
+import { getAuth, onAuthStateChanged } from 'firebase/auth'; 
+import { getFirestore, doc, getDoc } from "firebase/firestore"; 
 
 const Stack = createStackNavigator();
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(null); // Track if user is logged in or not
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
 
   useEffect(() => {
     const auth = getAuth();
@@ -22,10 +29,10 @@ export default function App() {
     
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const userDoc = await getDoc(doc(db, "users", user.uid)); // Get user document
+        const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
           const userData = userDoc.data();
-          console.log('User is logged in:', user.email, 'First Name:', userData.firstName); // Log email and first name
+          console.log('User is logged in:', user.email, 'First Name:', userData.firstName);
         } else {
           console.log('User document not found.');
         }
@@ -36,13 +43,11 @@ export default function App() {
       }
     });
 
-    return () => unsubscribe(); // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, []);
 
-
   if (isAuthenticated === null) {
-    // Optional: Render a loading screen or splash screen here
-    return null;
+    return null; // You might want to show a loading indicator here
   }
 
   return (
@@ -50,12 +55,43 @@ export default function App() {
       <StatusBar style="auto" />
       <Stack.Navigator>
         {isAuthenticated ? (
-          // User is logged in, show Home screen
           <>
-            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen 
+              name="Home" 
+              component={HomeScreen} 
+              options={{ 
+                animationEnabled: false,
+                gestureEnabled: false, 
+                header: () => <DefaultHeader /> 
+              }}
+            />
+            <Stack.Screen 
+              name="Account" 
+              component={AccountScreen} 
+              options={{ 
+                animationEnabled: false,
+                gestureEnabled: false,
+                header: (props) => <AccountHeader {...props} /> // Pass props to AccountHeader
+              }} 
+            />
+            <Stack.Screen 
+              name="Settings" 
+              component={SettingsScreen} 
+              options={{
+                headerShown: true,
+                headerStyle: { backgroundColor: '#fff' },
+                headerTintColor: 'black', 
+                headerBackTitleVisible: false,
+                headerBackImage: () => (
+                  <Image
+                    source={require('./assets/images/back_icon.png')} // Your custom back arrow icon
+                    style={{ marginLeft: 10, width: 24, height: 20, tintColor: '#ffaa00' }} // Adjust size and color
+                  />
+                ),
+              }}
+            />
           </>
         ) : (
-          // User is not logged in, show Login and Register screens
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
