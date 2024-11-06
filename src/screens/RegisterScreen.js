@@ -1,11 +1,36 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, Image, TextInput, TouchableOpacity, ScrollView, Keyboard, TouchableWithoutFeedback, KeyboardAvoidingView, Platform } from 'react-native';
+import axios from "axios";
 
 const RegisterScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isAgreed, setIsAgreed] = useState(false); 
+  const [showPassword, setShowPassword] = useState(false); 
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); 
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    if (!isAgreed) {
+      alert('Please agree to the Terms and Conditions.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      alert('Passwords do not match.');
+      return;
+    }
+    try {
+      const userData = {email, password};
+      const result = await axios.post("http://localhost:5001/register", userData); // TODO: will update the URL later
+      console.log(result);
+      alert('Registration successful!');
+      navigation.replace('Home');
+    } catch (error) {
+      console.error("Registration Error: ", error);
+      alert('Registration failed. Please try again.');
+    }
+  };
 
   return (
     <KeyboardAvoidingView

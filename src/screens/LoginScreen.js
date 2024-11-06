@@ -1,5 +1,18 @@
+import axios from 'axios';
 import React from 'react';
 import { StyleSheet, Text, View, Image, TextInput, TouchableOpacity, ScrollView, Keyboard, TouchableWithoutFeedback, KeyboardAvoidingView, Platform } from 'react-native';
+
+const handleLogin = async (e) => {
+  try {
+    const userData = {email, password};
+    const result = await axios.post("http://localhost:5001/register", userData);
+    console.log(result);
+    console.log("Navigating to Home...");
+  } catch (error) {
+    console.error("Login Error: ", error);
+    alert('Login failed. Please check your email and password.');
+  }
+};
 
 const LoginScreen = ({ navigation }) => {
   return (
